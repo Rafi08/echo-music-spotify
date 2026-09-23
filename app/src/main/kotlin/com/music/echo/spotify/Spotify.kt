@@ -9,6 +9,8 @@ package echo.music.iad1tya.spotify
 
 import echo.music.iad1tya.spotify.models.SpotifyAlbum
 import echo.music.iad1tya.spotify.models.SpotifyArtist
+import echo.music.iad1tya.spotify.models.SpotifyConnectDevice
+import echo.music.iad1tya.spotify.models.SpotifyConnectDevices
 import echo.music.iad1tya.spotify.models.SpotifyImage
 import echo.music.iad1tya.spotify.models.SpotifyPaging
 import echo.music.iad1tya.spotify.models.SpotifyPlaylist
@@ -366,6 +368,44 @@ object Spotify {
 
     throw SpotifyException(429, "Rate limited after $maxRetries retries")
   }
+
+  private suspend fun authenticatedPlayerPost(
+    endpoint: String,
+    body: JsonObject? = null,
+  ): Result<Unit> = runCatching {
+    val token = accessToken ?: throw SpotifyException(401, "Not authenticated")
+    val response =
+      restClient.post(endpoint) {
+        header("Authorization", "Bearer $token")
+        body?.let { setBody(it) }
+      }
+    if (response.status.value !in 200..299) {
+      throw SpotifyException(response.status.value, "Spotify player API error: ${response.bodyAsText()}")
+    }
+  }
+
+  suspend fun connectDevices(): Result<List<SpotifyConnectDevice>> = runCatching {
+    authenticatedGet<SpotifyConnectDevices>("me/player/devices").getOrThrow().devices
+  }
+
+  suspend fun transferPlayback(
+    deviceId: String,
+    play: Boolean? = null,
+  ): Result<Unit> {
+    val body = buildJsonObject {
+      putJsonArray("device_ids") { add(deviceId) }
+      play?.let { put("play", it) }
+    }
+    return authenticatedPlayerPost("me/player", body)
+  }
+
+  suspend fun connectPlay(): Result<Unit> = authenticatedPlayerPost("me/player/play")
+
+  suspend fun connectPause(): Result<Unit> = authenticatedPlayerPost("me/player/pause")
+
+  suspend fun connectSkipNext(): Result<Unit> = authenticatedPlayerPost("me/player/next")
+
+  suspend fun connectSkipPrevious(): Result<Unit> = authenticatedPlayerPost("me/player/previous")
 
   // ── GQL response converters ──────────────────────────────────────────
 

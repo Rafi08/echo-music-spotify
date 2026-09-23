@@ -22,6 +22,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -221,9 +222,13 @@ private fun SpotifyImportDialogs(
   if (showSpotifyLogin) {
     SpotifyLoginSheet(
       onDismiss = onDismissLogin,
-      onCookiesCaptured = { spDc, spKey ->
+      onCookiesCaptured = { spDc, spKey, soloistApiKey ->
         onDismissLogin()
-        viewModel.connectWithCookies(spDc = spDc, spKey = spKey)
+        viewModel.connectWithCookies(
+          spDc = spDc,
+          spKey = spKey,
+          soloistApiKey = soloistApiKey,
+        )
       },
     )
   }
@@ -307,11 +312,12 @@ private fun SpotifyImportProgressDialog(
 @Composable
 private fun SpotifyLoginSheet(
   onDismiss: () -> Unit,
-  onCookiesCaptured: (spDc: String, spKey: String) -> Unit,
+  onCookiesCaptured: (spDc: String, spKey: String, soloistApiKey: String) -> Unit,
 ) {
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
   var webView by remember { mutableStateOf<WebView?>(null) }
   var captured by remember { mutableStateOf(false) }
+  var soloistApiKey by remember { mutableStateOf("") }
 
   DisposableEffect(Unit) {
     onDispose {
@@ -344,6 +350,15 @@ private fun SpotifyLoginSheet(
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
+      OutlinedTextField(
+        value = soloistApiKey,
+        onValueChange = { soloistApiKey = it },
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        label = { Text(stringResource(R.string.spotify_soloist_api_key)) },
+        supportingText = { Text(stringResource(R.string.spotify_soloist_api_key_desc)) },
+        visualTransformation = PasswordVisualTransformation(),
+      )
       AndroidView(
         modifier = Modifier.fillMaxWidth().weight(1f).clip(MaterialTheme.shapes.large),
         factory = { context ->
@@ -358,12 +373,13 @@ private fun SpotifyLoginSheet(
 
               fun captureCookies(url: String?): Boolean {
                 if (captured) return true
+                if (soloistApiKey.isBlank()) return false
                 val cookies = readSpotifyCookies(cookieManager, url)
                 val spDc = cookies["sp_dc"].orEmpty()
                 if (spDc.isBlank()) return false
                 captured = true
                 cookieManager.flush()
-                onCookiesCaptured(spDc, cookies["sp_key"].orEmpty())
+                onCookiesCaptured(spDc, cookies["sp_key"].orEmpty(), soloistApiKey.trim())
                 return true
               }
 

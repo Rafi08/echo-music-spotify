@@ -139,6 +139,13 @@ Package/namespace: `echo.music.iad1tya` (app module). Application ID matches.
   coroutines-guava, WorkManager, Firebase Analytics/Crashlytics
   (**GMS flavor only**), Google Drive API (GMS flavor, for backup/sync),
   Play Services Cast (GMS flavor).
+
+- **Spotify integration:** The Spotify import login collects a user-provided
+  Soloist API key and stores it in DataStore. `SpotifySoloistClient` controls a
+  locally reachable Soloist WebSocket, while `Spotify` exposes official
+  Connect device and playback-transfer calls. Soloist audio playback itself
+  still requires an external Linux Soloist/PCM bridge; Android does not receive
+  Spotify FLAC URLs from the Web API.
 - **Build system:** Gradle version catalog at `gradle/libs.versions.toml`
   (always add new deps here, not inline). AGP `9.0.0`, Kotlin `2.3.10`,
   KSP for annotation processing (Room, Hilt).

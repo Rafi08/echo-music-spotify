@@ -87,11 +87,18 @@ constructor(
   fun connectWithCookies(
     spDc: String,
     spKey: String,
+    soloistApiKey: String,
   ) {
     if (spDc.isBlank()) return
     viewModelScope.launch(Dispatchers.IO) {
       _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-      runCatching { repository.connectWithCookies(spDc = spDc, spKey = spKey) }
+      runCatching {
+        repository.connectWithCookies(
+          spDc = spDc,
+          spKey = spKey,
+          soloistApiKey = soloistApiKey,
+        )
+      }
         .onSuccess { session ->
           _uiState.update {
             it.copy(

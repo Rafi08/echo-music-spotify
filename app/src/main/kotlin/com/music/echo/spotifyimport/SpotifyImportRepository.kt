@@ -19,6 +19,7 @@ import echo.music.iad1tya.constants.SpotifyAccountAvatarUrlKey
 import echo.music.iad1tya.constants.SpotifyAccountNameKey
 import echo.music.iad1tya.constants.SpotifySpDcKey
 import echo.music.iad1tya.constants.SpotifySpKeyKey
+import echo.music.iad1tya.constants.SpotifySoloistApiKey
 import echo.music.iad1tya.db.MusicDatabase
 import echo.music.iad1tya.db.entities.PlaylistEntity
 import echo.music.iad1tya.db.entities.PlaylistSongMap
@@ -102,10 +103,16 @@ constructor(
   suspend fun connectWithCookies(
     spDc: String,
     spKey: String,
+    soloistApiKey: String,
   ): SpotifyImportSession =
     withContext(Dispatchers.IO) {
       context.dataStore.edit { prefs ->
         prefs[SpotifySpDcKey] = spDc
+        if (soloistApiKey.isNotBlank()) {
+          prefs[SpotifySoloistApiKey] = soloistApiKey.trim()
+        } else {
+          prefs.remove(SpotifySoloistApiKey)
+        }
         if (spKey.isNotBlank()) {
           prefs[SpotifySpKeyKey] = spKey
         } else {
@@ -128,6 +135,7 @@ constructor(
         prefs.remove(SpotifySpKeyKey)
         prefs.remove(SpotifyAccessTokenKey)
         prefs.remove(SpotifyAccessTokenExpiresAtKey)
+        prefs.remove(SpotifySoloistApiKey)
         prefs.remove(SpotifyAccountNameKey)
         prefs.remove(SpotifyAccountAvatarUrlKey)
       }

@@ -1,0 +1,8 @@
+{
+  "features": [
+    "Spotify login now collects and stores the user's Soloist API key for Spotify playback integration.",
+    "Added Spotify Soloist WebSocket control and Spotify Connect device playback commands."
+  ],
+  "bug_fixes": [],
+  "contributors": []
+}
